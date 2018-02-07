@@ -1,12 +1,9 @@
-// This is a template for a Node.js scraper on morph.io (https://morph.io)
-
 var cheerio = require("cheerio");
 var request = require("request");
 var sqlite3 = require("sqlite3").verbose();
 
 // https://stackoverflow.com/questions/10011011/using-node-js-how-do-i-read-a-json-object-into-server-memory
 var pages = require('./pages.json');
-var i;
 
 function initDatabase(callback) {
 	// Set up sqlite database.
@@ -58,17 +55,25 @@ function run(db) {
 	//		email differences
 	
 	// Loop through pages
-	i = 0;
-	nextPage();
+	nextPage(0);
 	
 }
 
 function nextPage() {
-	console.log(i, pages[i]);
 	
-	// Download page
-	fetchPage(pages[i].url, function (body) {
-		
+	if (i > pages.length) {
+		console.log('processed ' + (pages.length + 1) ' pages, finished')
+		return;
+	}
+	
+	// Fetch the next page
+	console.log(i, pages[i]);
+	fetchPage(pages[i].url, processfetchedPage);
+	
+}
+
+function processfetchedPage(body) {
+	
 		// Get selected text
 		var $ = cheerio.load(body);
 		var target = $(pages[i].selector);
@@ -96,7 +101,6 @@ function nextPage() {
 		*/
 
 		db.close();
-	});
 	
 }
 
