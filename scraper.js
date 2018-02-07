@@ -68,13 +68,10 @@ function run(db) {
 		// Use request to read in pages.
 		fetchPage(pages[i].url, function (body) {
 			
-			console.log(i, body);
-			
 			// Use cheerio to find things in the page with css selectors.
 			var $ = cheerio.load(body);
-
 			var contents = $(page.selector).text().fullTrim();
-			console.log(i, contents);
+			console.log(i, contents.substr(0, 100));
 			
 			/*
 			updateRow
