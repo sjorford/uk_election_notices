@@ -60,22 +60,23 @@ function run(db) {
 	//		email differences
 	
 	console.log(pages);
-	console.log(pages.each);
 	
-	for (page in pages) {
+	for (i in pages) {
 		
-		console.log(page);
+		console.log(i, pages[i]);
 		
-		/*
 		// Use request to read in pages.
-		fetchPage(page.url, function (body) {
+		fetchPage(pages[i].url, function (body) {
+			
+			console.log(i, body);
 			
 			// Use cheerio to find things in the page with css selectors.
 			var $ = cheerio.load(body);
 
 			var contents = $(page.selector).text().fullTrim();
+			console.log(i, contents);
 			
-			
+			/*
 			updateRow
 			
 			each(function () {
@@ -84,10 +85,10 @@ function run(db) {
 			});
 
 			readRows(db);
+			*/
 
 			db.close();
 		});
-		*/
 		
 		
 		
