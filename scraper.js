@@ -5,7 +5,7 @@ var request = require("request");
 var sqlite3 = require("sqlite3").verbose();
 
 // https://stackoverflow.com/questions/10011011/using-node-js-how-do-i-read-a-json-object-into-server-memory
-var pages = require('pages.json');
+var pages = require('/pages.json');
 
 function initDatabase(callback) {
 	// Set up sqlite database.
