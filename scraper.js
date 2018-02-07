@@ -70,7 +70,7 @@ function run(db) {
 			
 			// Use cheerio to find things in the page with css selectors.
 			var $ = cheerio.load(body);
-			var contents = $(page.selector).text().fullTrim();
+			var contents = $(pages[i].selector).text().fullTrim();
 			console.log(i, contents.substr(0, 100));
 			
 			/*
