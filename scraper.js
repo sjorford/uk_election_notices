@@ -44,8 +44,6 @@ function fetchPage(url, callback) {
 
 function run(db) {
 	
-	// Get list from pages.json
-	// For each page
 	// 		Download page
 	// 		Get selector
 	// 		Get full trimmed text
@@ -59,18 +57,16 @@ function run(db) {
 	// If differences
 	//		email differences
 	
-	console.log(pages);
-	
+	// Loop through pages
 	for (i in pages) {
+		console.log((i + 1) + '/', pages[i]);
 		
-		console.log(i, pages[i]);
-		
-		// Use request to read in pages.
+		// Download page
 		fetchPage(pages[i].url, function (body) {
 			
 			// Use cheerio to find things in the page with css selectors.
 			var $ = cheerio.load(body);
-			var contents = $(pages[i].selector).text().fullTrim();
+			var contents = fullTrim($(pages[i].selector).text());
 			console.log(i, contents.substr(0, 100));
 			
 			/*
@@ -91,6 +87,10 @@ function run(db) {
 		
 	}
 	
+}
+
+function fullTrim(string) {
+	return string.replace(/[\s\r\n]+/g, ' ').trim();
 }
 
 initDatabase(run);
