@@ -6,6 +6,7 @@ var sqlite3 = require("sqlite3").verbose();
 
 // https://stackoverflow.com/questions/10011011/using-node-js-how-do-i-read-a-json-object-into-server-memory
 var pages = require('./pages.json');
+var i;
 
 function initDatabase(callback) {
 	// Set up sqlite database.
@@ -44,7 +45,6 @@ function fetchPage(url, callback) {
 
 function run(db) {
 	
-	// 		Download page
 	// 		Get selector
 	// 		Get full trimmed text
 	//		if not in database
@@ -58,34 +58,45 @@ function run(db) {
 	//		email differences
 	
 	// Loop through pages
-	for (i in pages) {
-		console.log((i + 1) + '/', pages[i]);
+	i = 0;
+	nextPage();
+	
+}
+
+function nextPage() {
+	console.log(i, pages[i]);
+	
+	// Download page
+	fetchPage(pages[i].url, function (body) {
 		
-		// Download page
-		fetchPage(pages[i].url, function (body) {
-			
-			// Use cheerio to find things in the page with css selectors.
-			var $ = cheerio.load(body);
-			var contents = fullTrim($(pages[i].selector).text());
+		// Get selected text
+		var $ = cheerio.load(body);
+		var target = $(pages[i].selector);
+		if (target.length == 0) {
+			console.error(i, 'selector not found');
+		} else if (target.length == 0) {
+			console.error(i, target.length + ' instances of selector found');
+		} else {
+			var contents = fullTrim(target.text());
 			console.log(i, contents.substr(0, 100));
-			
-			/*
-			updateRow
-			
-			each(function () {
-				var value = $(this).text().trim();
-				updateRow(db, value);
-			});
-
-			readRows(db);
-			*/
-
-			db.close();
+		}
+		
+		/*
+		updateRow
+		
+		each(function () {
+			var value = $(this).text().trim();
+			updateRow(db, value);
 		});
+
+		readRows(db);
 		
-		
-		
-	}
+		i++;
+		nextPage();
+		*/
+
+		db.close();
+	});
 	
 }
 
