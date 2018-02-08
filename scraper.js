@@ -126,7 +126,7 @@ function processfetchedPage(body) {
 			// Insert row
 			console.log(i, 'inserting row');
 			var statement = db.prepare("INSERT INTO pages VALUES (?, ?, ?, ?, ?, ?)", 
-					[pages[i].name, pages[i].url, pages[i].selector, pages[i].contents]);
+					[pages[i].name, pages[i].url, pages[i].selector, pages[i].contents, pages[i].checked, pages[i].checked]);
 			statement.run();
 			statement.finalize(nextPage);
 			
