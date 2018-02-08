@@ -28,7 +28,7 @@ function getPages() {
 	
 	gsjson({spreadsheetId: '1C0FFS2EJYnnKNIP4hdt73sy7_9RIz70IvsYKoEt-Ebk'})
 		.then(result => {
-			pages = result.map(item => ({name: item.district, url: item.currentElectionsPage, selector: item.Selector}));
+			pages = result.map(item => ({name: item.district, url: item.currentElectionsPage, selector: item.selector}));
 			getFirstPage();
 		});
 	
@@ -57,13 +57,13 @@ function nextPage() {
 		console.log(i, 'getting page for ' + pages[i].name);
 		request(pages[i].url, function (error, response, body) {
 			if (error) {
-				console.log(i, 'error getting page', error);
+				console.error(i, 'error getting page', error);
 				return;
 			}
 			processfetchedPage(body);
 		});
 	} else {
-		console.log(i, 'no url for ' + pages[i].name);
+		console.warn(i, 'no url for ' + pages[i].name);
 		nextPage();
 	}
 	
@@ -93,7 +93,7 @@ function processfetchedPage(body) {
 		if (error) {
 			
 			// Log error
-			console.log(i, 'error retrieving row', error);
+			console.error(i, 'error retrieving row', error);
 			nextPage();
 			
 		} else if (row) {
