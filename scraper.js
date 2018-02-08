@@ -1,6 +1,7 @@
 var cheerio = require("cheerio");
 var request = require("request");
 var sqlite3 = require("sqlite3").verbose();
+var moment = require("moment");
 
 // https://stackoverflow.com/questions/10011011/using-node-js-how-do-i-read-a-json-object-into-server-memory
 var pages = require('./pages.json');
@@ -15,24 +16,13 @@ function initDatabase() {
 	db = new sqlite3.Database("data.sqlite");
 	db.serialize(function() {
 		// TODO: lastchecked, lastupdated
-		db.run("CREATE TABLE IF NOT EXISTS pages (name TEXT, url TEXT, selector TEXT, contents TEXT)");
+		db.run("CREATE TABLE IF NOT EXISTS pages (name TEXT, url TEXT, selector TEXT, contents TEXT, checked TEXT, updated TEXT)");
+		db.run("CREATE TABLE IF NOT EXISTS diffs (name TEXT, diff TEXT, date TEXT)");
 		getFirstPage();
 	});
 	
 }
 
-	// 		Get selector
-	// 		Get full trimmed text
-	//		if not in database
-	//			insert
-	//		else
-	//			compare
-	//			if difference
-	//				add to differences table
-	//			update
-	// If differences
-	//		email differences
-	
 function getFirstPage() {
 	
 	// Get first page
@@ -66,6 +56,8 @@ function nextPage() {
 function processfetchedPage(body) {
 	console.log(i, 'processing ' + pages[i].name);
 	
+	pages[i].checked = moment().format('YYYY-MM-DD HH:mm:SS');
+	
 	// Get selected text
 	var $ = cheerio.load(body);
 	var target = $(pages[i].selector);
@@ -94,35 +86,44 @@ function processfetchedPage(body) {
 				
 				// Selection criteria have changed, just update the table
 				console.log(i, 'url or selector has changed, updating table');
-				var statement = db.prepare("UPDATE pages SET url = ?, selector = ?, contents = ? WHERE name = ?", 
-						[pages[i].url, pages[i].selector, pages[i].contents, pages[i].name]);
+				var statement = db.prepare("UPDATE pages SET url = ?, selector = ?, contents = ?, checked = ?, updated = ? WHERE name = ?", 
+						[pages[i].url, pages[i].selector, pages[i].contents, pages[i].name, pages[i].checked, pages[i].checked]);
 				statement.run();
 				statement.finalize(nextPage);
 				
 			} else if (row.contents != pages[i].contents) {
 				
-				// Contents have changed, produce a diff
-				
-				// Update the table
+				// Contents have changed
 				console.log(i, 'contents have changed, updating table');
-				var statement = db.prepare("UPDATE pages SET contents = ? WHERE name = ?", 
-						[pages[i].contents, pages[i].name]);
+				
+				// TODO: produce a diff
+				var statement = db.prepare("INSERT INTO diffs VALUES (?, ?, ?)", 
+						[pages[i].name, '...', pages[i].checked]);
+				statement.run();
+				statement.finalize();
+				
+				// Update the main table
+				var statement = db.prepare("UPDATE pages SET contents = ?, checked = ?, updated = ? WHERE name = ?", 
+						[pages[i].contents, pages[i].checked, pages[i].checked, pages[i].name]);
 				statement.run();
 				statement.finalize(nextPage);
 				
 				
 			} else {
 				console.log(i, 'no change');
+				var statement = db.prepare("UPDATE pages SET checked = ? WHERE name = ?", 
+						[pages[i].checked, pages[i].name]);
+				statement.run();
+				statement.finalize(nextPage);
+				
 			}
-			
-			nextPage();
 			
 		} else {
 			
 			// Insert row
 			console.log(i, 'inserting row');
-			var statement = db.prepare("INSERT INTO pages VALUES (?, ?, ?, ?)", 
-					[pages[i].name, pages[i].url, pages[i].selector, pages[i].contents]);
+			var statement = db.prepare("INSERT INTO pages VALUES (?, ?, ?, ?, ?, ?)", 
+					[pages[i].name, pages[i].url, pages[i].selector, pages[i].contents], moment().);
 			statement.run();
 			statement.finalize(nextPage);
 			
