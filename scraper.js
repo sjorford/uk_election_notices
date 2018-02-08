@@ -54,7 +54,7 @@ function nextPage() {
 	
 	// Fetch the page
 	if (pages[i].url) {
-		console.log(i, 'getting page for ' + pages[i].name);
+		console.debug(i, 'getting page for ' + pages[i].name);
 		request(pages[i].url, function (error, response, body) {
 			if (error) {
 				console.error(i, 'error getting page', error);
@@ -70,7 +70,7 @@ function nextPage() {
 }
 
 function processfetchedPage(body) {
-	console.log(i, 'processing ' + pages[i].name);
+	console.debug(i, 'processing ' + pages[i].name);
 	
 	pages[i].checked = moment().format('YYYY-MM-DD HH:mm:ss');
 	
@@ -83,8 +83,6 @@ function processfetchedPage(body) {
 		console.error(i, 'too many instances of selector found (' + target.length + ')');
 	} else {
 		pages[i].contents = fullTrim(getSpacedText(target.get(0)));
-		//pages[i].contents = pages[i].checked + ' ' + pages[i].contents; // TESTING
-		//console.log(i, pages[i].contents);
 	}
 	
 	// Read the row for this page
@@ -97,7 +95,6 @@ function processfetchedPage(body) {
 			nextPage();
 			
 		} else if (row) {
-			//console.log(i, row);
 			
 			if (row.url != pages[i].url || row.selector != pages[i].selector) {
 				
@@ -128,7 +125,7 @@ function processfetchedPage(body) {
 				
 				
 			} else {
-				console.log(i, 'no change');
+				console.debug(i, 'no change');
 				var statement = db.prepare("UPDATE pages SET checked = ? WHERE name = ?", 
 						[pages[i].checked, pages[i].name]);
 				statement.run();
@@ -139,7 +136,7 @@ function processfetchedPage(body) {
 		} else {
 			
 			// Insert row
-			console.log(i, 'inserting row');
+			console.log(i, 'new page, inserting row');
 			var statement = db.prepare("INSERT INTO pages VALUES (?, ?, ?, ?, ?, ?)", 
 					[pages[i].name, pages[i].url, pages[i].selector, pages[i].contents, pages[i].checked, pages[i].checked]);
 			statement.run();
