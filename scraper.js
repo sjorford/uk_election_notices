@@ -6,11 +6,10 @@ var gsjson  = require("google-spreadsheet-to-json");
 var moment  = require("moment");
 
 // https://stackoverflow.com/questions/10011011/using-node-js-how-do-i-read-a-json-object-into-server-memory
-var pages = require('./pages.json');
+//var pages = require('./pages.json');
 var conf = require('./conf.json');
 
-var db;
-var i;
+var db, i, pages;
 
 function initDatabase() {
 	
@@ -20,12 +19,19 @@ function initDatabase() {
 		// TODO: lastchecked, lastupdated
 		db.run("CREATE TABLE IF NOT EXISTS pages (name TEXT, url TEXT, selector TEXT, contents TEXT, checked TEXT, updated TEXT)");
 		db.run("CREATE TABLE IF NOT EXISTS diffs (name TEXT, diff TEXT, date TEXT)");
-		getFirstPage();
+		getPages();
 	});
+	
+}
+
+function getPages() {
 	
 	// test
 	gsjson({spreadsheetId: '1C0FFS2EJYnnKNIP4hdt73sy7_9RIz70IvsYKoEt-Ebk'})
-		.then(result => console.log(result));
+		.then(result => {
+			pages = result.map(item => {name: this.district, url: this.currentElectionsPage, selector: this.Selector});
+			getFirstPage;
+		});
 	
 }
 
@@ -48,14 +54,19 @@ function nextPage() {
 	}
 	
 	// Fetch the page
-	console.log(i, 'getting page', pages[i].name);
-	request(pages[i].url, function (error, response, body) {
-		if (error) {
-			console.log(i, 'error getting page', error);
-			return;
-		}
-		processfetchedPage(body);
-	});
+	if (pages[i].url) {
+		console.log(i, 'getting page for ' + pages[i].name);
+		request(pages[i].url, function (error, response, body) {
+			if (error) {
+				console.log(i, 'error getting page', error);
+				return;
+			}
+			processfetchedPage(body);
+		});
+	} else {
+		console.log(i, 'no url for ' + pages[i].name);
+		nextPage();
+	}
 	
 }
 
