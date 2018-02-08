@@ -55,25 +55,25 @@ function run(db) {
 	//		email differences
 	
 	// Loop through pages
-	nextPage(0);
-	
-}
-
-function nextPage() {
-	
-	if (i > pages.length) {
-		console.log('processed ' + (pages.length + 1) + ' pages, finished');
-		return;
+	var i = 0;
+	nextPage();
+		
+	function nextPage() {
+		
+		if (i > pages.length) {
+			db.close();
+			console.log('processed ' + (pages.length + 1) + ' pages, finished');
+			return;
+		}
+		
+		// Fetch the next page
+		console.log(i, pages[i]);
+		fetchPage(pages[i].url, processfetchedPage);
+		
 	}
-	
-	// Fetch the next page
-	console.log(i, pages[i]);
-	fetchPage(pages[i].url, processfetchedPage);
-	
-}
 
-function processfetchedPage(body) {
-	
+	function processfetchedPage(body) {
+		
 		// Get selected text
 		var $ = cheerio.load(body);
 		var target = $(pages[i].selector);
@@ -93,15 +93,16 @@ function processfetchedPage(body) {
 			var value = $(this).text().trim();
 			updateRow(db, value);
 		});
-
+		
 		readRows(db);
+		
+		*/
 		
 		i++;
 		nextPage();
-		*/
+		
+	}
 
-		db.close();
-	
 }
 
 function fullTrim(string) {
