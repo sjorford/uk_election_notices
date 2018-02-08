@@ -29,13 +29,11 @@ function readRows(db, name) {
 }
 
 function fetchPage(url, callback) {
-	// Use request to read in pages.
 	request(url, function (error, response, body) {
 		if (error) {
 			console.log("Error requesting page: " + error);
 			return;
 		}
-
 		callback(body);
 	});
 }
@@ -60,8 +58,7 @@ function run(db) {
 		
 	function nextPage() {
 		
-		console.log(i, pages.length);
-		if (i > pages.length) {
+		if (i >= pages.length) {
 			db.close();
 			console.log('processed ' + (pages.length + 1) + ' pages, finished');
 			return;
@@ -83,9 +80,11 @@ function run(db) {
 		} else if (target.length == 0) {
 			console.error(i, target.length + ' instances of selector found');
 		} else {
-			var contents = fullTrim(target.text());
-			console.log(i, contents.substr(0, 100));
+			pages[i].contents = fullTrim(target.text());
+			console.log(i, pages[i].contents.substr(0, 100));
 		}
+		
+		readRow();
 		
 		/*
 		updateRow
@@ -101,6 +100,14 @@ function run(db) {
 		
 		i++;
 		nextPage();
+		
+	}
+	
+	function readRow(text) {
+		
+		
+		
+		
 		
 	}
 
