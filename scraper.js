@@ -68,7 +68,7 @@ function processfetchedPage(body) {
 		console.error(i, 'too many instances of selector found (' + target.length + ')');
 	} else {
 		pages[i].contents = fullTrim(getSpacedText(target.get(0)));
-		pages[i].contents = pages[i].checked + ' ' + pages[i].contents; // TESTING
+		//pages[i].contents = pages[i].checked + ' ' + pages[i].contents; // TESTING
 		//console.log(i, pages[i].contents);
 	}
 	
@@ -98,15 +98,10 @@ function processfetchedPage(body) {
 				// Contents have changed
 				console.log(i, 'contents have changed, updating table');
 				
-				// TODO: produce a diff of lines
-				// https://www.npmjs.com/package/diff
-				// or sjorford/js/diff-string.js
-				
+				// Save diff of lines
 				var diffs = diff.diffLines(row.contents, pages[i].contents);
-				console.log(diffs);
-				
 				var statement = db.prepare("INSERT INTO diffs VALUES (?, ?, ?)", 
-						[pages[i].name, '...', pages[i].checked]);
+						[pages[i].name, JSON.stringify(diffs), pages[i].checked]);
 				statement.run();
 				statement.finalize();
 				
