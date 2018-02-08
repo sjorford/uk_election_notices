@@ -13,6 +13,7 @@ function initDatabase() {
 	// Set up sqlite database
 	db = new sqlite3.Database("data.sqlite");
 	db.serialize(function() {
+		// TODO: lastchecked, lastupdated
 		db.run("CREATE TABLE IF NOT EXISTS pages (name TEXT, url TEXT, selector TEXT, contents TEXT)");
 		getFirstPage();
 	});
@@ -34,7 +35,7 @@ function initDatabase() {
 function getFirstPage() {
 	
 	// Get first page
-	i = 0;
+	i = -1;
 	nextPage();
 	
 }
@@ -42,6 +43,7 @@ function getFirstPage() {
 function nextPage() {
 	
 	// Finish if no more pages
+	i++;
 	if (i >= pages.length) {
 		db.close();
 		console.log('processed ' + pages.length + ' pages, finished');
@@ -76,42 +78,41 @@ function processfetchedPage(body) {
 	
 	// Read the row for this page
 	db.get("SELECT name, url, selector, contents FROM pages WHERE name = '" + pages[i].name + "'", function(err, row) {
-		console.log(err, row);
-		//console.log(row.id + ": " + row.name);
 		
-		if (row) {
-			// compare
-			// if different, log
-			// update row
+		if (error) {
+			
+			// Log error
+			console.log(i, "error retrieving row", err);
+			
+		} else if (row) {
+			console.log(i, row);
+			
+			// Compare page and selector
+				// Update row
+			
+			// Else
+			// Compare text
+				// Update row
+				// Log a change
 				
 			i++;
 			nextPage();
 			
 		} else {
-			// insert row
-							
-			i++;
-			nextPage();
 			
-
+			// Insert row
+			console.log(i, 'inserting row');
+			var statement = db.prepare("INSERT INTO data VALUES (?, ?, ?, ?)", 
+					[pages[i].name, pages[i].url, pages[i].selector, pages[i].contents]);
+			statement.run();
+			statement.finalize();
+			
 		}
 		
+		i++;
+		nextPage();
+		
 	});
-	
-	
-	
-	
-	/*
-	updateRow
-	
-	each(function () {
-		var value = $(this).text().trim();
-		updateRow(db, value);
-	});
-	
-	readRows(db);
-	
-	*/
 	
 }
 
