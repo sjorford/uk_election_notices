@@ -28,8 +28,8 @@ function getPages() {
 	
 	gsjson({spreadsheetId: '1C0FFS2EJYnnKNIP4hdt73sy7_9RIz70IvsYKoEt-Ebk'})
 		.then(result => {
-			pages = result.map(item => {'name': item.district, 'url': item.currentElectionsPage, 'selector': item.Selector});
-			getFirstPage;
+			pages = result.map(item => ({name: item.district, url: item.currentElectionsPage, selector: item.Selector}));
+			getFirstPage();
 		});
 	
 }
