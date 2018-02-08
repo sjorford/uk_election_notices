@@ -83,9 +83,12 @@ function processfetchedPage(body) {
 			
 			// Log error
 			console.log(i, "error retrieving row", error);
+			nextPage();
 			
 		} else if (row) {
 			console.log(i, row);
+			
+			
 			
 			// Compare page and selector
 				// Update row
@@ -95,7 +98,6 @@ function processfetchedPage(body) {
 				// Update row
 				// Log a change
 				
-			i++;
 			nextPage();
 			
 		} else {
@@ -105,12 +107,9 @@ function processfetchedPage(body) {
 			var statement = db.prepare("INSERT INTO pages VALUES (?, ?, ?, ?)", 
 					[pages[i].name, pages[i].url, pages[i].selector, pages[i].contents]);
 			statement.run();
-			statement.finalize();
+			statement.finalize(nextPage);
 			
 		}
-		
-		i++;
-		nextPage();
 		
 	});
 	
