@@ -62,7 +62,7 @@ function run(db) {
 function nextPage() {
 	
 	if (i > pages.length) {
-		console.log('processed ' + (pages.length + 1) ' pages, finished')
+		console.log('processed ' + (pages.length + 1) + ' pages, finished');
 		return;
 	}
 	
