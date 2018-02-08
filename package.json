@@ -5,6 +5,7 @@
     "cheerio": "latest",
     "request": "latest",
     "sqlite3": "latest",
+    "diff": "latest",
     "moment": "latest"
   },
   "keywords": [

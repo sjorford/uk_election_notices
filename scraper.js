@@ -1,6 +1,7 @@
 var cheerio = require("cheerio");
 var request = require("request");
 var sqlite3 = require("sqlite3").verbose();
+var diff = require("diff");
 var moment = require("moment");
 
 // https://stackoverflow.com/questions/10011011/using-node-js-how-do-i-read-a-json-object-into-server-memory
@@ -67,6 +68,7 @@ function processfetchedPage(body) {
 		console.error(i, 'too many instances of selector found (' + target.length + ')');
 	} else {
 		pages[i].contents = fullTrim(getSpacedText(target.get(0)));
+		pages[i].contents = pages[i].checked + ' ' + pages[i].contents; // TESTING
 		//console.log(i, pages[i].contents);
 	}
 	
@@ -99,6 +101,10 @@ function processfetchedPage(body) {
 				// TODO: produce a diff of lines
 				// https://www.npmjs.com/package/diff
 				// or sjorford/js/diff-string.js
+				
+				var diffs = diff.diffLines(row.contents, pages[i].contents);
+				console.log(diffs);
+				
 				var statement = db.prepare("INSERT INTO diffs VALUES (?, ?, ?)", 
 						[pages[i].name, '...', pages[i].checked]);
 				statement.run();
