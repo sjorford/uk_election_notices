@@ -77,12 +77,12 @@ function processfetchedPage(body) {
 	}
 	
 	// Read the row for this page
-	db.get("SELECT name, url, selector, contents FROM pages WHERE name = '" + pages[i].name + "'", function(err, row) {
+	db.get("SELECT name, url, selector, contents FROM pages WHERE name = ?", [pages[i].name], function(error, row) {
 		
 		if (error) {
 			
 			// Log error
-			console.log(i, "error retrieving row", err);
+			console.log(i, "error retrieving row", error);
 			
 		} else if (row) {
 			console.log(i, row);
