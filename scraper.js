@@ -8,13 +8,13 @@ var pages = require('./pages.json');
 var db;
 var i;
 
-function initDatabase(callback) {
+function initDatabase() {
 	
 	// Set up sqlite database
-	var db = new sqlite3.Database("data.sqlite");
+	db = new sqlite3.Database("data.sqlite");
 	db.serialize(function() {
 		db.run("CREATE TABLE IF NOT EXISTS pages (name TEXT, url TEXT, selector TEXT, contents TEXT)");
-		callback(db);
+		getFirstPage();
 	});
 	
 }
@@ -31,7 +31,7 @@ function initDatabase(callback) {
 	// If differences
 	//		email differences
 	
-function run() {
+function getFirstPage() {
 	
 	// Get first page
 	i = 0;
@@ -75,7 +75,7 @@ function processfetchedPage(body) {
 	}
 	
 	// Read the row for this page
-	db.each("SELECT rowid AS id, name FROM data", function(err, row) {
+	db.each("SELECT name, url, selector, contents FROM pages WHERE name = '" + pages[i].name + "'", function(err, row) {
 		console.log(err, row);
 		//console.log(row.id + ": " + row.name);
 			
@@ -112,4 +112,4 @@ function fullTrim(string) {
 	return string.replace(/[\s\r\n]+/g, ' ').trim();
 }
 
-initDatabase(run);
+initDatabase();
