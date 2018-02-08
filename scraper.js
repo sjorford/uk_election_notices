@@ -54,7 +54,7 @@ function nextPage() {
 	
 	// Fetch the page
 	if (pages[i].url) {
-		console.debug(i, 'getting page for ' + pages[i].name);
+		//console.log(i, 'getting page for ' + pages[i].name);
 		request(pages[i].url, function (error, response, body) {
 			if (error) {
 				console.error(i, 'error getting page', error);
@@ -70,7 +70,7 @@ function nextPage() {
 }
 
 function processfetchedPage(body) {
-	console.debug(i, 'processing ' + pages[i].name);
+	//console.log(i, 'processing ' + pages[i].name);
 	
 	pages[i].checked = moment().format('YYYY-MM-DD HH:mm:ss');
 	
@@ -125,7 +125,7 @@ function processfetchedPage(body) {
 				
 				
 			} else {
-				console.debug(i, 'no change');
+				//console.log(i, 'no change');
 				var statement = db.prepare("UPDATE pages SET checked = ? WHERE name = ?", 
 						[pages[i].checked, pages[i].name]);
 				statement.run();
