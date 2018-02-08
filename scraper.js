@@ -102,7 +102,7 @@ function processfetchedPage(body) {
 			
 			// Insert row
 			console.log(i, 'inserting row');
-			var statement = db.prepare("INSERT INTO data VALUES (?, ?, ?, ?)", 
+			var statement = db.prepare("INSERT INTO pages VALUES (?, ?, ?, ?)", 
 					[pages[i].name, pages[i].url, pages[i].selector, pages[i].contents]);
 			statement.run();
 			statement.finalize();
@@ -114,13 +114,6 @@ function processfetchedPage(body) {
 		
 	});
 	
-}
-
-function updateRow(db, value) {
-	// Insert some data.
-	var statement = db.prepare("INSERT INTO data VALUES (?)");
-	statement.run(value);
-	statement.finalize();
 }
 
 function fullTrim(string) {
