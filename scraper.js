@@ -75,12 +75,26 @@ function processfetchedPage(body) {
 	}
 	
 	// Read the row for this page
-	db.each("SELECT name, url, selector, contents FROM pages WHERE name = '" + pages[i].name + "'", function(err, row) {
+	db.get("SELECT name, url, selector, contents FROM pages WHERE name = '" + pages[i].name + "'", function(err, row) {
 		console.log(err, row);
 		//console.log(row.id + ": " + row.name);
+		
+		if (row) {
+			// compare
+			// if different, log
+			// update row
+				
+			i++;
+			nextPage();
 			
-		i++;
-		nextPage();
+		} else {
+			// insert row
+							
+			i++;
+			nextPage();
+			
+
+		}
 		
 	});
 	
