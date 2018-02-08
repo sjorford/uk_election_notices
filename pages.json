@@ -1,1 +1,12 @@
-[{"name":"Bolton","url":"http://www.bolton.gov.uk/website/pages/Noticesandresults.aspx","selector":"[id=#page_Content]"}]
+[
+	{
+		"name": "Bolton",
+		"url": "http://www.bolton.gov.uk/website/pages/Noticesandresults.aspx",
+		"selector": "[id=#page_Content]"
+	},
+	{
+		"name": "Cheshire East",
+		"url": "http://www.cheshireeast.gov.uk/council_and_democracy/voting_and_elections/elections/by-elections_cheshire_east.aspx",
+		"selector": "#mainContent .span8"
+	}
+]
