@@ -139,13 +139,17 @@ function getSpacedText(element) {
 	if (element.nodeType == 3) {
 		return element.nodeValue;
 	} else if (element.nodeType == 1) {
-		//console.log('checking element node ' + element.tagName);
-		var contentsText = element.firstChild ? Array.from(element.childNodes).map(child => getSpacedText(child)).join('') : '';
-		if (conf.blocks.indexOf(element.tagName.toLowerCase()) >= 0) {
-			//console.log('block-level node ' + element.tagName + ', adding newlines');
-			return '\r\n' + contentsText + '\r\n';
+		var tag = element.tagName.toLowerCase();
+		if (conf.elements.block.indexOf(tag) >= 0 || conf.elements.inline.indexOf(tag) >= 0) {
+			var contentsText = element.firstChild ? Array.from(element.childNodes).map(child => getSpacedText(child)).join('') : '';
+			if (conf.elements.block.indexOf() >= 0) {
+				//console.log('block-level node ' + element.tagName + ', adding newlines');
+				return '\r\n' + contentsText + '\r\n';
+			} else {
+				return contentsText;
+			}
 		} else {
-			return contentsText;
+			return '';
 		}
 	} else {
 		return '';
