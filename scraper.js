@@ -64,7 +64,7 @@ function nextPage() {
 }
 
 function processfetchedPage(body) {
-	console.log(i, 'processing page', pages[i].name);
+	console.log(i, 'processing ' + pages[i].name);
 	
 	// Get selected text
 	var $ = cheerio.load(body);
@@ -75,7 +75,7 @@ function processfetchedPage(body) {
 		console.error(i, 'too many instances of selector found (' + target.length + ')');
 	} else {
 		pages[i].contents = fullTrim(getSpacedText(target.get(0)));
-		console.log(i, pages[i].contents);
+		//console.log(i, pages[i].contents);
 	}
 	
 	// Read the row for this page
@@ -88,9 +88,11 @@ function processfetchedPage(body) {
 			nextPage();
 			
 		} else if (row) {
-			console.log(i, row);
+			//console.log(i, row);
 			
 			if (row.url != pages[i].url || row.selector != pages[i].selector) {
+				
+				// Selection criteria have changed, just update the table
 				console.log(i, 'url or selector has changed, updating table');
 				var statement = db.prepare("UPDATE pages SET url = ?, selector = ?, contents = ? WHERE name = ?", 
 						[pages[i].url, pages[i].selector, pages[i].contents, pages[i].name]);
@@ -98,6 +100,10 @@ function processfetchedPage(body) {
 				statement.finalize(nextPage);
 				
 			} else if (row.contents != pages[i].contents) {
+				
+				// Contents have changed, produce a diff
+				
+				// Update the table
 				console.log(i, 'contents have changed, updating table');
 				var statement = db.prepare("UPDATE pages SET contents = ? WHERE name = ?", 
 						[pages[i].contents, pages[i].name]);
@@ -109,15 +115,6 @@ function processfetchedPage(body) {
 				console.log(i, 'no change');
 			}
 			
-			
-			// Compare page and selector
-				// Update row
-			
-			// Else
-			// Compare text
-				// Update row
-				// Log a change
-				
 			nextPage();
 			
 		} else {
