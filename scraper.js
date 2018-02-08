@@ -60,6 +60,7 @@ function run(db) {
 		
 	function nextPage() {
 		
+		console.log(i, pages.length);
 		if (i > pages.length) {
 			db.close();
 			console.log('processed ' + (pages.length + 1) + ' pages, finished');
