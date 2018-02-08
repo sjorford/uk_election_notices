@@ -157,8 +157,8 @@ function getSpacedText(element) {
 }
 
 function fullTrim(string) {
-	return string.replace(/[\s\r\n]+/g, ' ');
-	//return string.replace(/[\s\r\n]*\r\n[\s\r\n]*/g, '\r\n').replace(/\s+/g, ' ').trim();
+	//return string.replace(/[\s\r\n]+/g, ' ');
+	return string.replace(/[\s\r\n]*\r\n[\s\r\n]*/g, '\r\n').replace(/\s+/g, ' ').trim();
 }
 
 initDatabase();
