@@ -5,6 +5,11 @@ var diff    = require("diff");
 var gsjson  = require("google-spreadsheet-to-json");
 var moment  = require("moment");
 
+// TODO:
+// count number of pages processed
+// send emails for errors
+// something else I can't remember
+
 // https://stackoverflow.com/questions/10011011/using-node-js-how-do-i-read-a-json-object-into-server-memory
 //var pages = require('./pages.json');
 var conf = require('./conf.json');
