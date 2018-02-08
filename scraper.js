@@ -142,8 +142,7 @@ function getSpacedText(element) {
 		var tag = element.tagName.toLowerCase();
 		if (conf.elements.block.indexOf(tag) >= 0 || conf.elements.inline.indexOf(tag) >= 0) {
 			var contentsText = element.firstChild ? Array.from(element.childNodes).map(child => getSpacedText(child)).join('') : '';
-			if (conf.elements.block.indexOf() >= 0) {
-				//console.log('block-level node ' + element.tagName + ', adding newlines');
+			if (conf.elements.block.indexOf(tag) >= 0) {
 				return '\r\n' + contentsText + '\r\n';
 			} else {
 				return contentsText;
@@ -157,7 +156,6 @@ function getSpacedText(element) {
 }
 
 function fullTrim(string) {
-	//return string.replace(/[\s\r\n]+/g, ' ');
 	return string.replace(/[\s\r\n]*\r\n[\s\r\n]*/g, '\r\n').replace(/\s+/g, ' ').trim();
 }
 
