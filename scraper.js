@@ -56,7 +56,7 @@ function nextPage() {
 function processfetchedPage(body) {
 	console.log(i, 'processing ' + pages[i].name);
 	
-	pages[i].checked = moment().format('YYYY-MM-DD HH:mm:SS');
+	pages[i].checked = moment().format('YYYY-MM-DD HH:mm:ss');
 	
 	// Get selected text
 	var $ = cheerio.load(body);
@@ -66,7 +66,7 @@ function processfetchedPage(body) {
 	} else if (target.length == 0) {
 		console.error(i, 'too many instances of selector found (' + target.length + ')');
 	} else {
-		pages[i].contents = 'qqq ' + fullTrim(getSpacedText(target.get(0)));
+		pages[i].contents = fullTrim(getSpacedText(target.get(0)));
 		//console.log(i, pages[i].contents);
 	}
 	
@@ -96,7 +96,9 @@ function processfetchedPage(body) {
 				// Contents have changed
 				console.log(i, 'contents have changed, updating table');
 				
-				// TODO: produce a diff
+				// TODO: produce a diff of lines
+				// https://www.npmjs.com/package/diff
+				// or sjorford/js/diff-string.js
 				var statement = db.prepare("INSERT INTO diffs VALUES (?, ?, ?)", 
 						[pages[i].name, '...', pages[i].checked]);
 				statement.run();
