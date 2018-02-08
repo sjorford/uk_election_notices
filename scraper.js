@@ -1,8 +1,9 @@
 var cheerio = require("cheerio");
 var request = require("request");
 var sqlite3 = require("sqlite3").verbose();
-var diff = require("diff");
-var moment = require("moment");
+var diff    = require("diff");
+var gsjson  = require("google-spreadsheet-to-json");
+var moment  = require("moment");
 
 // https://stackoverflow.com/questions/10011011/using-node-js-how-do-i-read-a-json-object-into-server-memory
 var pages = require('./pages.json');
@@ -21,6 +22,10 @@ function initDatabase() {
 		db.run("CREATE TABLE IF NOT EXISTS diffs (name TEXT, diff TEXT, date TEXT)");
 		getFirstPage();
 	});
+	
+	// test
+	gsjson('1C0FFS2EJYnnKNIP4hdt73sy7_9RIz70IvsYKoEt-Ebk')
+		.then(result => console.log(result));
 	
 }
 

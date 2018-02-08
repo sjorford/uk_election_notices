@@ -6,6 +6,7 @@
     "request": "latest",
     "sqlite3": "latest",
     "diff": "latest",
+    "google-spreadsheet-to-json": "latest",
     "moment": "latest"
   },
   "keywords": [
