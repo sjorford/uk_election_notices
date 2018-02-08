@@ -138,7 +138,7 @@ function processfetchedPage(body) {
 function getSpacedText(element) {
 	if (element.nodeType == 3) {
 		return element.textContent;
-	} else if (element.nodeType == 3) {
+	} else if (element.nodeType == 1) {
 		var contentsText = $(element).contents().toArray().map(child => getSpacedText(child)).join('');
 		if (conf.blocks.indexOf(element.tagName.toLowerCase()) >= 0) {
 			return '\r\n' + contentsText + '\r\n';
