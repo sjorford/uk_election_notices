@@ -4,6 +4,7 @@ var sqlite3 = require("sqlite3").verbose();
 
 // https://stackoverflow.com/questions/10011011/using-node-js-how-do-i-read-a-json-object-into-server-memory
 var pages = require('./pages.json');
+var conf = require('./conf.json');
 
 var db;
 var i;
@@ -51,10 +52,10 @@ function nextPage() {
 	}
 	
 	// Fetch the page
-	console.log(i, pages[i]);
+	console.log(i, 'getting page', pages[i].name);
 	request(pages[i].url, function (error, response, body) {
 		if (error) {
-			console.log("Error requesting page: " + error);
+			console.log(i, 'error getting page', error);
 			return;
 		}
 		processfetchedPage(body);
@@ -63,6 +64,7 @@ function nextPage() {
 }
 
 function processfetchedPage(body) {
+	console.log(i, 'processing page', pages[i].name);
 	
 	// Get selected text
 	var $ = cheerio.load(body);
@@ -70,9 +72,9 @@ function processfetchedPage(body) {
 	if (target.length == 0) {
 		console.error(i, 'selector not found');
 	} else if (target.length == 0) {
-		console.error(i, target.length + ' instances of selector found');
+		console.error(i, 'too many instances of selector found (' + target.length + ')');
 	} else {
-		pages[i].contents = fullTrim(target.text());
+		pages[i].contents = getSpacedText(target.text());
 		console.log(i, pages[i].contents.substr(0, 100));
 	}
 	
@@ -82,12 +84,30 @@ function processfetchedPage(body) {
 		if (error) {
 			
 			// Log error
-			console.log(i, "error retrieving row", error);
+			console.log(i, 'error retrieving row', error);
 			nextPage();
 			
 		} else if (row) {
 			console.log(i, row);
 			
+			if (row.url != pages[i].url || row.selector != pages[i].selector) {
+				console.log(i, 'url or selector has changed, updating table');
+				var statement = db.prepare("UPDATE pages SET url = ?, selector = ?, contents = ? WHERE name = ?", 
+						[pages[i].url, pages[i].selector, pages[i].contents, pages[i].name]);
+				statement.run();
+				statement.finalize(nextPage);
+				
+			} else if (row.contents != pages[i].contents) {
+				console.log(i, 'contents have changed, updating table');
+				var statement = db.prepare("UPDATE pages SET contents = ? WHERE name = ?", 
+						[pages[i].contents, pages[i].name]);
+				statement.run();
+				statement.finalize(nextPage);
+				
+				
+			} else {
+				console.log(i, 'no change');
+			}
 			
 			
 			// Compare page and selector
@@ -115,8 +135,23 @@ function processfetchedPage(body) {
 	
 }
 
+function getSpacedText(element) {
+	if (element.nodeType == 3) {
+		return element.textContent;
+	} else if (element.nodeType == 3) {
+		var contentsText = $(element).contents().toArray().map(child => getSpacedText(child)).join('');
+		if (conf.blocks.indexOf(element.tagName.toLowerCase()) >= 0) {
+			return '\r\n' + contentsText + '\r\n';
+		} else {
+			return contentsText;
+		}
+	} else {
+		return '';
+	}
+}
+
 function fullTrim(string) {
-	return string.replace(/[\s\r\n]+/g, ' ').trim();
+	return string.replace(/[\s\r\n]*\r\n[\s\r\n]*/g, '\r\n').replace(/\s+/g, ' ').trim();
 }
 
 initDatabase();
