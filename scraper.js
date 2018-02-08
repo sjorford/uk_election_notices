@@ -63,7 +63,7 @@ function nextPage() {
 			processfetchedPage(body);
 		});
 	} else {
-		console.warn(i, 'no url for ' + pages[i].name);
+		//console.log(i, 'no url for ' + pages[i].name);
 		nextPage();
 	}
 	
