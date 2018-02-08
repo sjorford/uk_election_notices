@@ -74,7 +74,7 @@ function processfetchedPage(body) {
 	} else if (target.length == 0) {
 		console.error(i, 'too many instances of selector found (' + target.length + ')');
 	} else {
-		pages[i].contents = getSpacedText(target.get(0));
+		pages[i].contents = fullTrim(getSpacedText(target.get(0)));
 		console.log(i, pages[i].contents);
 	}
 	
@@ -143,7 +143,7 @@ function getSpacedText(element) {
 		if (conf.elements.block.indexOf(tag) >= 0 || conf.elements.inline.indexOf(tag) >= 0) {
 			var contentsText = element.firstChild ? Array.from(element.childNodes).map(child => getSpacedText(child)).join('') : '';
 			if (conf.elements.block.indexOf(tag) >= 0) {
-				return '\r\n' + contentsText + '\r\n';
+				return '\n' + contentsText + '\n';
 			} else {
 				return contentsText;
 			}
@@ -156,7 +156,7 @@ function getSpacedText(element) {
 }
 
 function fullTrim(string) {
-	return string.replace(/[\s\r\n]*\r\n[\s\r\n]*/g, '\r\n').replace(/\s+/g, ' ').trim();
+	return string.replace(/\s*[\r\n]+\s*/g, '\n').replace(/[ \f\t\v\u00a0\u1680\u180e\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]+/g, ' ').trim();
 }
 
 initDatabase();
