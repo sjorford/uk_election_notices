@@ -24,7 +24,7 @@ function initDatabase() {
 	});
 	
 	// test
-	gsjson('1C0FFS2EJYnnKNIP4hdt73sy7_9RIz70IvsYKoEt-Ebk')
+	gsjson({spreadsheetId: '1C0FFS2EJYnnKNIP4hdt73sy7_9RIz70IvsYKoEt-Ebk'})
 		.then(result => console.log(result));
 	
 }
