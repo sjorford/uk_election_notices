@@ -139,8 +139,10 @@ function getSpacedText(element) {
 	if (element.nodeType == 3) {
 		return element.textContent;
 	} else if (element.nodeType == 1) {
+		console.log('checking element node ' + element.tagName);
 		var contentsText = $(element).contents().toArray().map(child => getSpacedText(child)).join('');
 		if (conf.blocks.indexOf(element.tagName.toLowerCase()) >= 0) {
+			console.log('block-level node ' + element.tagName + ', adding newlines');
 			return '\r\n' + contentsText + '\r\n';
 		} else {
 			return contentsText;
