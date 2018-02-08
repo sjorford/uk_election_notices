@@ -74,7 +74,7 @@ function processfetchedPage(body) {
 	} else if (target.length == 0) {
 		console.error(i, 'too many instances of selector found (' + target.length + ')');
 	} else {
-		pages[i].contents = getSpacedText(target.text());
+		pages[i].contents = getSpacedText(target.get(0));
 		console.log(i, pages[i].contents.substr(0, 100));
 	}
 	
