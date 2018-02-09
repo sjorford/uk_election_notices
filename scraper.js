@@ -44,8 +44,7 @@ function getFirstPage() {
 	
 	// Get first page
 	i = -1;
-	numFetched = 0;
-	numUpdated = 0;
+	numFetched = numUpdated = numErrors = 0;
 	nextPage();
 	
 }
