@@ -70,7 +70,7 @@ function nextPage() {
 			request(pages[i].url, function (error, response, body) {
 				if (error) {
 					numErrors++;
-					console.error(i, 'error getting page', error);
+					console.error(i, pages[i].name, 'error getting page', error);
 					return;
 				}
 				processfetchedPage(body);
@@ -92,12 +92,12 @@ function processfetchedPage(body) {
 	var target = $(pages[i].selector);
 	if (target.length == 0) {
 		numErrors++;
-		console.error(i, 'selector not found');
+		console.error(i, pages[i].name, 'selector not found');
 		nextPage();
 		return;
 	} else if (target.length == 0) {
 		numErrors++;
-		console.error(i, 'too many instances of selector found (' + target.length + ')');
+		console.error(i, pages[i].name, 'too many instances of selector found (' + target.length + ')');
 		nextPage();
 		return;
 	}
@@ -113,7 +113,7 @@ function processfetchedPage(body) {
 			
 			// Log error
 			numErrors++;
-			console.error(i, 'error retrieving row', error);
+			console.error(i, pages[i].name, 'error retrieving row', error);
 			nextPage();
 			return;
 			
@@ -123,7 +123,7 @@ function processfetchedPage(body) {
 				
 				// Selection criteria have changed, just update the table
 				numUpdated++;
-				console.log(i, 'url or selector has changed, updating table');
+				console.log(i, pages[i].name, 'url or selector has changed, updating table');
 				var statement = db.prepare("UPDATE pages SET url = ?, selector = ?, contents = ?, checked = ?, updated = ? WHERE name = ?", 
 						[pages[i].url, pages[i].selector, pages[i].contents, pages[i].name, pages[i].checked, pages[i].checked]);
 				statement.run();
@@ -133,7 +133,7 @@ function processfetchedPage(body) {
 				
 				// Contents have changed
 				numUpdated++;
-				console.log(i, 'contents have changed, updating table');
+				console.log(i, pages[i].name, 'contents have changed, updating table');
 				
 				// Save diff of lines
 				var diffs = diff.diffLines(row.contents, pages[i].contents);
@@ -150,7 +150,7 @@ function processfetchedPage(body) {
 				
 				
 			} else {
-				//console.log(i, 'no change');
+				//console.log(i, pages[i].name, 'no change');
 				var statement = db.prepare("UPDATE pages SET checked = ? WHERE name = ?", 
 						[pages[i].checked, pages[i].name]);
 				statement.run();
@@ -162,7 +162,7 @@ function processfetchedPage(body) {
 			
 			// Insert row
 			numUpdated++;
-			console.log(i, 'new page, inserting row');
+			console.log(i, pages[i].name, 'new page, inserting row');
 			var statement = db.prepare("INSERT INTO pages VALUES (?, ?, ?, ?, ?, ?)", 
 					[pages[i].name, pages[i].url, pages[i].selector, pages[i].contents, pages[i].checked, pages[i].checked]);
 			statement.run();
@@ -201,7 +201,7 @@ function getSpacedText(element) {
 			
 			// Ignore other elements
 			if (conf.elements.other.indexOf(tag) < 0) {
-				console.warn(i, 'unknown element encountered (' + tag + ')');
+				console.warn(i, pages[i].name, 'unknown element encountered (' + tag + ')');
 			}
 			return '';
 			
