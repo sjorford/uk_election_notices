@@ -200,7 +200,7 @@ function getSpacedText(element) {
 		} else {
 			
 			// Ignore other elements
-			if (conf.elements.other.indexOf(tag) == 0) {
+			if (conf.elements.other.indexOf(tag) < 0) {
 				console.warn(i, 'unknown element encountered (' + tag + ')');
 			}
 			return '';
