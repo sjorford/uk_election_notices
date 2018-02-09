@@ -6,8 +6,8 @@ var gsjson  = require("google-spreadsheet-to-json");
 var moment  = require("moment");
 
 // TODO:
-// count number of pages processed
 // send emails for errors
+// front end to view diffs
 // something else I can't remember
 
 // https://stackoverflow.com/questions/10011011/using-node-js-how-do-i-read-a-json-object-into-server-memory
@@ -32,6 +32,7 @@ function initDatabase() {
 
 function getPages() {
 	
+	// TODO: put this in a conf file I guess
 	gsjson({spreadsheetId: '1C0FFS2EJYnnKNIP4hdt73sy7_9RIz70IvsYKoEt-Ebk'})
 		.then(result => {
 			pages = result.map(item => ({name: item.district, url: item.currentElectionsPage, selector: item.selector}));
@@ -174,22 +175,43 @@ function processfetchedPage(body) {
 }
 
 function getSpacedText(element) {
+	
 	if (element.nodeType == 3) {
+		
+		// Get raw content of text nodes
 		return element.nodeValue;
+		
 	} else if (element.nodeType == 1) {
+		
+		// Only process display elements
 		var tag = element.tagName.toLowerCase();
 		if (conf.elements.block.indexOf(tag) >= 0 || conf.elements.inline.indexOf(tag) >= 0) {
+			
+			// Get contents of descendant elements
 			var contentsText = element.firstChild ? Array.from(element.childNodes).map(child => getSpacedText(child)).join('') : '';
+			
+			// Separate block elements with newlines
 			if (conf.elements.block.indexOf(tag) >= 0) {
 				return '\n' + contentsText + '\n';
 			} else {
 				return contentsText;
 			}
+			
 		} else {
+			
+			// Ignore other elements
+			if (conf.elements.other.indexOf(tag) == 0) {
+				console.warn(i, 'unknown element encountered (' + tag + ')');
+			}
 			return '';
+			
 		}
+		
 	} else {
+		
+		// Ignore all other node types (?)
 		return '';
+		
 	}
 }
 
