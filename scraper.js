@@ -75,6 +75,7 @@ function nextPage() {
 				}
 				processfetchedPage(body);
 			});
+			break;
 		} else {
 			//console.log(i, 'no url for ' + pages[i].name);
 		}
