@@ -15,6 +15,7 @@ var moment  = require("moment");
 var conf = require('./conf.json');
 
 var db, i, pages;
+var numFetched, numUpdated, numErrors;
 
 function initDatabase() {
 	
@@ -43,33 +44,41 @@ function getFirstPage() {
 	
 	// Get first page
 	i = -1;
+	numFetched = 0;
+	numUpdated = 0;
 	nextPage();
 	
 }
 
 function nextPage() {
 	
-	// Finish if no more pages
-	i++;
-	if (i >= pages.length) {
-		db.close();
-		console.log('processed ' + pages.length + ' pages, finished');
-		return;
-	}
-	
-	// Fetch the page
-	if (pages[i].name && pages[i].url && pages[i].selector) {
-		//console.log(i, 'getting page for ' + pages[i].name);
-		request(pages[i].url, function (error, response, body) {
-			if (error) {
-				console.error(i, 'error getting page', error);
-				return;
-			}
-			processfetchedPage(body);
-		});
-	} else {
-		//console.log(i, 'no url for ' + pages[i].name);
-		nextPage();
+	while (true) {
+		
+		// Finish if no more pages
+		i++;
+		if (i >= pages.length) {
+			db.close();
+			console.log(numFetched + ' of ' + pages.length + ' pages fetched, ' + numUpdated + ' updated');
+			console.log(numErrors + ' errors were encountered');
+			return;
+		}
+
+		// Fetch the page
+		if (pages[i].name && pages[i].url && pages[i].selector) {
+			//console.log(i, 'getting page for ' + pages[i].name);
+			numFetched++;
+			request(pages[i].url, function (error, response, body) {
+				if (error) {
+					numErrors++;
+					console.error(i, 'error getting page', error);
+					return;
+				}
+				processfetchedPage(body);
+			});
+		} else {
+			//console.log(i, 'no url for ' + pages[i].name);
+		}
+		
 	}
 	
 }
@@ -77,18 +86,24 @@ function nextPage() {
 function processfetchedPage(body) {
 	//console.log(i, 'processing ' + pages[i].name);
 	
-	pages[i].checked = moment().format('YYYY-MM-DD HH:mm:ss');
-	
-	// Get selected text
+	// Find unique instance of selector
 	var $ = cheerio.load(body);
 	var target = $(pages[i].selector);
 	if (target.length == 0) {
+		numErrors++;
 		console.error(i, 'selector not found');
+		nextPage();
+		return;
 	} else if (target.length == 0) {
+		numErrors++;
 		console.error(i, 'too many instances of selector found (' + target.length + ')');
-	} else {
-		pages[i].contents = fullTrim(getSpacedText(target.get(0)));
+		nextPage();
+		return;
 	}
+	
+	// Get selected text
+	pages[i].contents = fullTrim(getSpacedText(target.get(0)));
+	pages[i].checked = moment().format('YYYY-MM-DD HH:mm:ss');
 	
 	// Read the row for this page
 	db.get("SELECT name, url, selector, contents FROM pages WHERE name = ?", [pages[i].name], function(error, row) {
@@ -96,14 +111,17 @@ function processfetchedPage(body) {
 		if (error) {
 			
 			// Log error
+			numErrors++;
 			console.error(i, 'error retrieving row', error);
 			nextPage();
+			return;
 			
 		} else if (row) {
 			
 			if (row.url != pages[i].url || row.selector != pages[i].selector) {
 				
 				// Selection criteria have changed, just update the table
+				numUpdated++;
 				console.log(i, 'url or selector has changed, updating table');
 				var statement = db.prepare("UPDATE pages SET url = ?, selector = ?, contents = ?, checked = ?, updated = ? WHERE name = ?", 
 						[pages[i].url, pages[i].selector, pages[i].contents, pages[i].name, pages[i].checked, pages[i].checked]);
@@ -113,6 +131,7 @@ function processfetchedPage(body) {
 			} else if (row.contents != pages[i].contents) {
 				
 				// Contents have changed
+				numUpdated++;
 				console.log(i, 'contents have changed, updating table');
 				
 				// Save diff of lines
@@ -141,6 +160,7 @@ function processfetchedPage(body) {
 		} else {
 			
 			// Insert row
+			numUpdated++;
 			console.log(i, 'new page, inserting row');
 			var statement = db.prepare("INSERT INTO pages VALUES (?, ?, ?, ?, ?, ?)", 
 					[pages[i].name, pages[i].url, pages[i].selector, pages[i].contents, pages[i].checked, pages[i].checked]);
