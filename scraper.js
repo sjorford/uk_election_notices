@@ -58,7 +58,7 @@ function nextPage() {
 	}
 	
 	// Fetch the page
-	if (pages[i].url) {
+	if (pages[i].name && pages[i].url && pages[i].selector) {
 		//console.log(i, 'getting page for ' + pages[i].name);
 		request(pages[i].url, function (error, response, body) {
 			if (error) {
