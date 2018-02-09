@@ -58,7 +58,7 @@ function nextPage() {
 		if (i >= pages.length) {
 			db.close();
 			console.log(numFetched + ' of ' + pages.length + ' pages fetched, ' + numUpdated + ' updated');
-			console.log(numErrors + ' errors were encountered');
+			if (numErrors > 0) console.log(numErrors == 1 ? '1 error was encountered' : numErrors + ' errors were encountered');
 			return;
 		}
 
