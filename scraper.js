@@ -101,6 +101,13 @@ function processfetchedPage(body) {
 	pages[i].contents = fullTrim(getSpacedText(target.get(0)));
 	pages[i].checked = moment().format('YYYY-MM-DD HH:mm:ss');
 	
+	// Check text is not empty
+	if (pages[i].contents.length == 0) {
+		console.error(i, pages[i].name, 'no text found');
+		nextPage();
+		return;
+	}
+	
 	// Read the row for this page
 	db.get("SELECT name, url, selector, contents FROM pages WHERE name = ?", [pages[i].name], function(error, row) {
 		
