@@ -1,9 +1,9 @@
 {
 	"elements": {
 		"block":
-			["h1", "h2", "h3", "h4", "h5", "h6", "address", "article", "aside", "blockquote", "canvas", "dd", "div", "dl", "dt", "fieldset", "figcaption", "figure", "footer", "form", "header", "hgroup", "hr", "li", "main", "nav", "ol", "output", "p", "pre", "section", "table", "tfoot", "ul", "video", "tr", "td", "th", "tbody", "thead", "noscript", "legend"],
+			["h1", "h2", "h3", "h4", "h5", "h6", "address", "article", "aside", "blockquote", "canvas", "dd", "div", "dl", "dt", "fieldset", "figcaption", "figure", "footer", "form", "header", "hgroup", "hr", "li", "main", "nav", "ol", "output", "p", "pre", "section", "table", "tfoot", "ul", "video", "tr", "td", "th", "tbody", "thead", "noscript", "legend", "br"],
 		"inline":
-			["a", "abbr", "acronym", "b", "bdo", "big", "br", "button", "cite", "code", "dfn", "em", "i", "kbd", "label", "map", "q", "samp", "small", "span", "strong", "sub", "sup", "time", "tt", "var"],
+			["a", "abbr", "acronym", "b", "bdo", "big", "button", "cite", "code", "dfn", "em", "i", "kbd", "label", "map", "q", "samp", "small", "span", "strong", "sub", "sup", "time", "tt", "var"],
 		"other":
 			["img", "input", "textarea", "script"]
 	}
