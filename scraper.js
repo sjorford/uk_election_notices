@@ -179,7 +179,7 @@ function getSpacedText(element) {
 	if (element.nodeType == 3) {
 		
 		// Get raw content of text nodes
-		return element.nodeValue;
+		return element.nodeValue.replace(/[\r\n]/g, ' ');
 		
 	} else if (element.nodeType == 1) {
 		
