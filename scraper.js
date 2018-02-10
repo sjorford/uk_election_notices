@@ -11,7 +11,6 @@ var moment  = require("moment");
 // something else I can't remember
 
 // https://stackoverflow.com/questions/10011011/using-node-js-how-do-i-read-a-json-object-into-server-memory
-//var pages = require('./pages.json');
 var conf = require('./conf.json');
 
 var db, i, pages;
@@ -22,7 +21,6 @@ function initDatabase() {
 	// Set up sqlite database
 	db = new sqlite3.Database("data.sqlite");
 	db.serialize(function() {
-		// TODO: lastchecked, lastupdated
 		db.run("CREATE TABLE IF NOT EXISTS pages (name TEXT, url TEXT, selector TEXT, contents TEXT, checked TEXT, updated TEXT)");
 		db.run("CREATE TABLE IF NOT EXISTS diffs (name TEXT, diff TEXT, date TEXT)");
 		getPages();
@@ -32,8 +30,8 @@ function initDatabase() {
 
 function getPages() {
 	
-	// TODO: put this in a conf file I guess
-	gsjson({spreadsheetId: '1C0FFS2EJYnnKNIP4hdt73sy7_9RIz70IvsYKoEt-Ebk'})
+	// Get pages from Google Sheet
+	gsjson({spreadsheetId: conf.spreadsheetId})
 		.then(result => {
 			pages = result.map(item => ({name: item.district, url: item.currentElectionsPage, selector: item.selector}));
 			getFirstPage();
@@ -203,7 +201,7 @@ function getSpacedText(element) {
 			
 			// Ignore other elements
 			if (conf.elements.other.indexOf(tag) < 0) {
-				console.warn(i, pages[i].name, 'unknown element encountered (' + tag + ')');
+				console.warn(i, pages[i].name, `unknown element encountered (${tag})`);
 			}
 			return '';
 			
@@ -212,6 +210,7 @@ function getSpacedText(element) {
 	} else {
 		
 		// Ignore all other node types (?)
+		console.log(i, pages[i], `unknown node type encountered (${element.nodeType})`);
 		return '';
 		
 	}
