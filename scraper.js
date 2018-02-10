@@ -90,14 +90,9 @@ function processfetchedPage(body) {
 	// Find unique instance of selector
 	var $ = cheerio.load(body);
 	var target = $(pages[i].selector);
-	if (target.length == 0) {
+	if (target.length != 1) {
 		numErrors++;
-		console.error(i, pages[i].name, 'selector not found');
-		nextPage();
-		return;
-	} else if (target.length == 0) {
-		numErrors++;
-		console.error(i, pages[i].name, 'too many instances of selector found (' + target.length + ')');
+		console.error(i, pages[i].name, target.length == 0 ? 'selector not found' : `too many instances of selector found (${target.length})`);
 		nextPage();
 		return;
 	}
