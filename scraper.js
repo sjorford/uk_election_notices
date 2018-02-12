@@ -138,7 +138,7 @@ function processfetchedPage(body) {
 				
 				// Save diff of lines
 				var diffs = diff.diffLines(row.contents, pages[i].contents);
-				var statement = db.prepare("INSERT INTO diffs VALUES (?, ?, ?)", 
+				var statement = db.prepare("INSERT INTO diffs (name, diff, date) VALUES (?, ?, ?)", 
 						[pages[i].name, JSON.stringify(diffs), pages[i].checked]);
 				statement.run();
 				statement.finalize();
@@ -166,8 +166,8 @@ function processfetchedPage(body) {
 			// Insert row
 			numUpdated++;
 			console.log(i, pages[i].name, 'new page, inserting row');
-			var statement = db.prepare("INSERT INTO pages VALUES (?, ?, ?, ?, ?, ?)", 
-					[pages[i].name, pages[i].url, pages[i].selector, pages[i].contents, pages[i].checked, pages[i].checked]);
+			var statement = db.prepare("INSERT INTO pages (name, url, selector, contents, checked, updated, error) VALUES (?, ?, ?, ?, ?, ?, ?)", 
+					[pages[i].name, pages[i].url, pages[i].selector, pages[i].contents, pages[i].checked, pages[i].checked], '');
 			statement.run();
 			statement.finalize(nextPage);
 			
