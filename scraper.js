@@ -125,7 +125,8 @@ function processfetchedPage(body) {
 				numUpdated++;
 				console.log(i, pages[i].name, 'url or selector has changed, updating table');
 				var statement = db.prepare("UPDATE pages SET url = ?, selector = ?, contents = ?, checked = ?, updated = ? WHERE name = ?", 
-						[pages[i].url, pages[i].selector, pages[i].contents, pages[i].name, pages[i].checked, pages[i].checked]);
+						[pages[i].url, pages[i].selector, pages[i].contents, pages[i].checked, pages[i].checked, 
+							pages[i].name]);
 				statement.run();
 				statement.finalize(nextPage);
 				
@@ -144,7 +145,8 @@ function processfetchedPage(body) {
 				
 				// Update the main table
 				var statement = db.prepare("UPDATE pages SET contents = ?, checked = ?, updated = ? WHERE name = ?", 
-						[pages[i].contents, pages[i].checked, pages[i].checked, pages[i].name]);
+						[pages[i].contents, pages[i].checked, pages[i].checked, 
+							pages[i].name]);
 				statement.run();
 				statement.finalize(nextPage);
 				
@@ -152,7 +154,8 @@ function processfetchedPage(body) {
 			} else {
 				//console.log(i, pages[i].name, 'no change');
 				var statement = db.prepare("UPDATE pages SET checked = ? WHERE name = ?", 
-						[pages[i].checked, pages[i].name]);
+						[pages[i].checked, 
+							pages[i].name]);
 				statement.run();
 				statement.finalize(nextPage);
 				
