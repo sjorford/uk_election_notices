@@ -58,12 +58,14 @@ function nextPage() {
 		index++;
 		console.log(index, session);
 		if (index >= pages.length) {
+			console.debug(index, session, 'no more pages, quitting scraper');
 			quitScraper();
 			return;
 		}
 		
 		// Only process spreadsheet rows with a URL and selector
 		if (pages[index].name && pages[index].url && pages[index].selector) {
+			console.debug(index, session, 'reading database row');
 			readDatabaseRow(pages[index]);
 			break;
 		}
