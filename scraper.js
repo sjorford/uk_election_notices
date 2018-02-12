@@ -13,7 +13,7 @@ var moment  = require("moment");
 // https://stackoverflow.com/questions/10011011/using-node-js-how-do-i-read-a-json-object-into-server-memory
 var conf = require('./conf.json');
 
-var db, i, pages;
+var db, index, pages;
 var numFetched, numUpdated, numErrors;
 
 function initDatabase() {
@@ -34,15 +34,15 @@ function getPages() {
 	gsjson({spreadsheetId: conf.spreadsheetId})
 		.then(result => {
 			pages = result.map(item => ({name: item.district, url: item.currentElectionsPage, selector: item.selector}));
-			getFirstPage();
+			firstPage();
 		});
 	
 }
 
-function getFirstPage() {
+function firstPage() {
 	
 	// Get first page
-	i = -1;
+	index = -1;
 	numFetched = numUpdated = numErrors = 0;
 	nextPage();
 	
@@ -53,135 +53,155 @@ function nextPage() {
 	while (true) {
 		
 		// Finish if no more pages
-		i++;
-		if (i >= pages.length) {
-			db.close();
-			console.log(numFetched + ' of ' + pages.length + ' pages fetched, ' + numUpdated + ' updated');
-			if (numErrors > 0) console.log(numErrors == 1 ? '1 error was encountered' : numErrors + ' errors were encountered');
+		index++;
+		if (index >= pages.length) {
+			quitScraper();
 			return;
 		}
-
-		// Fetch the page
-		if (pages[i].name && pages[i].url && pages[i].selector) {
-			//console.log(i, 'getting page for ' + pages[i].name);
-			numFetched++;
-			request(pages[i].url, function (error, response, body) {
-				if (error) {
-					numErrors++;
-					console.error(i, pages[i].name, 'error getting page', error);
-					return;
-				}
-				processfetchedPage(body);
-			});
+		
+		// Only process spreadsheet rows with a URL and selector
+		if (pages[index].name && pages[index].url && pages[index].selector) {
+			readDatabaseRow(pages[index]);
 			break;
-		} else {
-			//console.log(i, 'no url for ' + pages[i].name);
 		}
 		
 	}
 	
 }
 
-function processfetchedPage(body) {
-	//console.log(i, 'processing ' + pages[i].name);
+function quitScraper() {
+	
+	// Close the database and log summary
+	db.close();
+	console.log(numFetched + ' of ' + pages.length + ' pages fetched, ' + numUpdated + ' updated');
+	if (numErrors > 0) console.log(numErrors == 1 ? '1 error was encountered' : numErrors + ' errors were encountered');
+	
+}
+
+function readDatabaseRow(page) {
+	
+	// Read the database row for this page
+	db.get("SELECT name, url, selector, contents FROM pages WHERE name = ?", [page.name], function(error, row) {
+		if (error) {
+			
+			// Exit scraper on database error
+			numErrors++;
+			console.error(page.name, 'error retrieving database row', error);
+			quitScraper();
+			return;
+			
+		} else {
+			fetchPage(page, row);
+		}
+	});
+	
+}
+
+function fetchPage(page, row) {
+	
+	// Fetch the page
+	numFetched++;
+	request(page.url, function (error, response, body) {
+		if (error) {
+			logError(page, row, 'error fetching page', error);
+			nextPage();
+		} else {
+			processfetchedPage(page, row, body);
+		}
+	});
+	
+}
+
+function processfetchedPage(page, row, body) {
 	
 	// Find unique instance of selector
 	var $ = cheerio.load(body);
-	var target = $(pages[i].selector);
+	var target = $(page.selector);
 	if (target.length != 1) {
-		numErrors++;
-		console.error(i, pages[i].name, target.length == 0 ? 'selector not found' : `too many instances of selector found (${target.length})`);
+		logError(page, row, target.length == 0 ? 'selector not found' : `too many instances of selector found (${target.length})`);
 		nextPage();
 		return;
 	}
 	
 	// Get selected text
-	pages[i].contents = fullTrim(getSpacedText(target.get(0)));
-	pages[i].checked = moment().format('YYYY-MM-DD HH:mm:ss');
+	var contents = fullTrim(getSpacedText(target.get(0)));
 	
 	// Check text is not empty
-	if (pages[i].contents.length == 0) {
-		console.error(i, pages[i].name, 'no text found');
+	if (contents.length == 0) {
+		logError(page, row, 'no text found');
 		nextPage();
 		return;
 	}
 	
-	// Read the row for this page
-	db.get("SELECT name, url, selector, contents FROM pages WHERE name = ?", [pages[i].name], function(error, row) {
+	if (row) {
 		
-		if (error) {
+		if (row.url != page.url || row.selector != page.selector) {
 			
-			// Log error
-			numErrors++;
-			console.error(i, pages[i].name, 'error retrieving row', error);
-			nextPage();
-			return;
+			// Selection criteria have changed, update the table without logging a diff
+			numUpdated++;
+			console.log(page.name, 'url or selector has changed, updating table');
+			var statement = db.prepare("UPDATE pages SET url = ?, selector = ?, contents = ?, checked = ?, updated = ?, error = ? WHERE name = ?", 
+					[page.url, page.selector, contents, currentTime(), currentTime(), '',  
+						page.name]);
+			statement.run();
+			statement.finalize(nextPage);
 			
-		} else if (row) {
+		} else if (row.contents != page.contents) {
 			
-			if (row.url != pages[i].url || row.selector != pages[i].selector) {
-				
-				// Selection criteria have changed, just update the table
-				numUpdated++;
-				console.log(i, pages[i].name, 'url or selector has changed, updating table');
-				var statement = db.prepare("UPDATE pages SET url = ?, selector = ?, contents = ?, checked = ?, updated = ? WHERE name = ?", 
-						[pages[i].url, pages[i].selector, pages[i].contents, pages[i].checked, pages[i].checked, 
-							pages[i].name]);
-				statement.run();
-				statement.finalize(nextPage);
-				
-			} else if (row.contents != pages[i].contents) {
-				
-				// Contents have changed
-				numUpdated++;
-				console.log(i, pages[i].name, 'contents have changed, updating table');
-				
-				// Save diff of lines
-				var diffs = diff.diffLines(row.contents, pages[i].contents);
+			// Contents have changed
+			numUpdated++;
+			console.log(page.name, 'contents have changed, updating table');
+			
+			// Save diff of lines
+			if (row.contents.length > 0) {
+				var diffs = diff.diffLines(row.contents, contents);
 				var statement = db.prepare("INSERT INTO diffs (name, diff, date) VALUES (?, ?, ?)", 
-						[pages[i].name, JSON.stringify(diffs), pages[i].checked]);
+						[page.name, JSON.stringify(diffs), currentTime()]);
 				statement.run();
 				statement.finalize();
-				
-				// Update the main table
-				var statement = db.prepare("UPDATE pages SET contents = ?, checked = ?, updated = ? WHERE name = ?", 
-						[pages[i].contents, pages[i].checked, pages[i].checked, 
-							pages[i].name]);
-				statement.run();
-				statement.finalize(nextPage);
-				
-				
-			} else {
-				//console.log(i, pages[i].name, 'no change');
-				var statement = db.prepare("UPDATE pages SET checked = ? WHERE name = ?", 
-						[pages[i].checked, 
-							pages[i].name]);
-				statement.run();
-				statement.finalize(nextPage);
-				
 			}
+			
+			// Update the main table
+			var statement = db.prepare("UPDATE pages SET contents = ?, checked = ?, updated = ?, error = ? WHERE name = ?", 
+					[contents, currentTime(), currentTime(), '', 
+						page.name]);
+			statement.run();
+			statement.finalize(nextPage);
 			
 		} else {
 			
-			// Insert row
-			numUpdated++;
-			console.log(i, pages[i].name, 'new page, inserting row');
-			var statement = db.prepare("INSERT INTO pages (name, url, selector, contents, checked, updated, error) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-					[pages[i].name, pages[i].url, pages[i].selector, pages[i].contents, pages[i].checked, pages[i].checked], '');
+			// No change, just update the last checked time
+			var statement = db.prepare("UPDATE pages SET checked = ?, error = ? WHERE name = ?", 
+					[currentTime(), '', 
+						page.name]);
 			statement.run();
 			statement.finalize(nextPage);
 			
 		}
 		
-	});
+	} else {
+		
+		// Insert page into table
+		numUpdated++;
+		console.log(page.name, 'new page, inserting row');
+		var statement = db.prepare("INSERT INTO pages (name, url, selector, contents, checked, updated, error) VALUES (?, ?, ?, ?, ?, ?, ?)", 
+				[page.name, page.url, page.selector, contents, currentTime(), currentTime(), '']);
+		statement.run();
+		statement.finalize(nextPage);
+		
+	}
+	
+	nextPage();
+	return;
 	
 }
 
+// Get text of HTML element, respecting block-level element boundaries
 function getSpacedText(element) {
 	
 	if (element.nodeType == 3) {
 		
-		// Get raw content of text nodes
+		// Get raw content of text nodes, removing newlines
 		return element.nodeValue.replace(/[\r\n]/g, ' ');
 		
 	} else if (element.nodeType == 1) {
@@ -193,7 +213,7 @@ function getSpacedText(element) {
 			// Get contents of descendant elements
 			var contentsText = element.firstChild ? Array.from(element.childNodes).map(child => getSpacedText(child)).join('') : '';
 			
-			// Separate block elements with newlines
+			// Surround block elements with newlines
 			if (conf.elements.block.indexOf(tag) >= 0) {
 				return '\n' + contentsText + '\n';
 			} else {
@@ -204,7 +224,7 @@ function getSpacedText(element) {
 			
 			// Ignore other elements
 			if (conf.elements.other.indexOf(tag) < 0) {
-				console.warn(i, pages[i].name, `unknown element encountered (${tag})`);
+				console.warn(page.name, `unknown element encountered (${tag})`);
 			}
 			return '';
 			
@@ -214,15 +234,47 @@ function getSpacedText(element) {
 		
 		// Ignore comment nodes
 		if (element.nodeType != 8) {
-			console.log(i, pages[i].name, `unknown node type encountered (${element.nodeType})`);
+			console.log(page.name, `unknown node type encountered (${element.nodeType})`);
 			return '';
 		}
 		
 	}
 }
 
+function logError(page, row, error, originalError) {
+	
+	// Log error to the console
+	numErrors++;
+	var fullError = error + (originalError ? ': ' + originalError : '');
+	console.error(page.name, fullError);
+	
+	if (row) {
+		
+		// Update row
+		var statement = db.prepare("UPDATE pages SET checked = ?, error = ? WHERE name = ?", 
+				[currentTime(), fullError, 
+					page.name]);
+		statement.run();
+		statement.finalize(nextPage);
+		
+	} else {
+		
+		// Insert row
+		var statement = db.prepare("INSERT INTO pages (name, url, selector, contents, checked, updated, error) VALUES (?, ?, ?, ?, ?, ?, ?)", 
+				[page.name, page.url, page.selector, '', currentTime(), '', fullError]);
+		statement.run();
+		statement.finalize(nextPage);
+		
+	}
+	
+}
+
 function fullTrim(string) {
 	return string.replace(/\s*[\r\n]+\s*/g, '\n').replace(/[ \f\t\v\u00a0\u1680\u180e\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]+/g, ' ').trim();
+}
+
+function currentTime() {
+	return moment().format('YYYY-MM-DD HH:mm:ss');
 }
 
 initDatabase();
