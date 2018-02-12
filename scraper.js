@@ -22,8 +22,7 @@ function initDatabase() {
 	db = new sqlite3.Database("data.sqlite");
 	db.serialize(function() {
 		db.run("CREATE TABLE IF NOT EXISTS pages (name TEXT, url TEXT, selector TEXT, contents TEXT, checked TEXT, updated TEXT, error TEXT)");
-		db.run("CREATE TABLE IF NOT EXISTS diffs (name TEXT, diff TEXT, date TEXT)");
-		getPages();
+		db.run("CREATE TABLE IF NOT EXISTS diffs (name TEXT, diff TEXT, date TEXT)", getPages);
 	});
 	
 }
@@ -157,21 +156,25 @@ function processfetchedPage(page, row, body) {
 			numUpdated++;
 			console.log(page.name, 'contents have changed, updating table');
 			
-			// Save diff of lines
-			if (row.contents.length > 0) {
-				var diffs = diff.diffLines(row.contents, contents);
-				var statement = db.prepare("INSERT INTO diffs (name, diff, date) VALUES (?, ?, ?)", 
-						[page.name, JSON.stringify(diffs), currentTime()]);
+			db.serialize(() => {
+				
+				// Save diff of lines
+				if (row.contents.length > 0) {
+					var diffs = diff.diffLines(row.contents, contents);
+					var statement = db.prepare("INSERT INTO diffs (name, diff, date) VALUES (?, ?, ?)", 
+							[page.name, JSON.stringify(diffs), currentTime()]);
+					statement.run();
+					statement.finalize();
+				}
+				
+				// Update the main table
+				var statement = db.prepare("UPDATE pages SET contents = ?, checked = ?, updated = ?, error = ? WHERE name = ?", 
+						[contents, currentTime(), currentTime(), '', 
+							page.name]);
 				statement.run();
-				statement.finalize();
-			}
-			
-			// Update the main table
-			var statement = db.prepare("UPDATE pages SET contents = ?, checked = ?, updated = ?, error = ? WHERE name = ?", 
-					[contents, currentTime(), currentTime(), '', 
-						page.name]);
-			statement.run();
-			statement.finalize(nextPage);
+				statement.finalize(nextPage);
+				
+			});
 			
 		} else {
 			
