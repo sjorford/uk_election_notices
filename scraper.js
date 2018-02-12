@@ -56,16 +56,16 @@ function nextPage() {
 		
 		// Finish if no more pages
 		index++;
-		console.log(index, session);
+		//console.log(index, session);
 		if (index >= pages.length) {
-			console.log(index, session, 'no more pages, quitting scraper');
+			//console.log(index, session, 'no more pages, quitting scraper');
 			quitScraper();
 			return;
 		}
 		
 		// Only process spreadsheet rows with a URL and selector
 		if (pages[index].name && pages[index].url && pages[index].selector) {
-			console.log(index, session, 'reading database row');
+			//console.log(index, session, 'reading database row');
 			readDatabaseRow(pages[index]);
 			break;
 		}
