@@ -209,9 +209,11 @@ function getSpacedText(element) {
 		
 	} else {
 		
-		// Ignore all other node types (?)
-		console.log(i, pages[i], `unknown node type encountered (${element.nodeType})`);
-		return '';
+		// Ignore comment nodes
+		if (element.nodeType != 8) {
+			console.log(i, pages[i].name, `unknown node type encountered (${element.nodeType})`);
+			return '';
+		}
 		
 	}
 }
