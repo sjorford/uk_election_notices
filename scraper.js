@@ -146,7 +146,7 @@ function processfetchedPage(page, row, body) {
 			statement.run();
 			statement.finalize(nextPage);
 			
-		} else if (row.contents != page.contents) {
+		} else if (row.contents != contents) {
 			
 			// Contents have changed
 			numUpdated++;
