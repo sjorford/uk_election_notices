@@ -54,6 +54,7 @@ function nextPage() {
 		
 		// Finish if no more pages
 		index++;
+		console.log(index);
 		if (index >= pages.length) {
 			quitScraper();
 			return;
