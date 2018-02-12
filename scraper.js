@@ -9,6 +9,7 @@ var moment  = require("moment");
 // send emails for errors
 // front end to view diffs
 // something else I can't remember
+// add error column to pages table
 
 // https://stackoverflow.com/questions/10011011/using-node-js-how-do-i-read-a-json-object-into-server-memory
 var conf = require('./conf.json');
@@ -21,7 +22,7 @@ function initDatabase() {
 	// Set up sqlite database
 	db = new sqlite3.Database("data.sqlite");
 	db.serialize(function() {
-		db.run("CREATE TABLE IF NOT EXISTS pages (name TEXT, url TEXT, selector TEXT, contents TEXT, checked TEXT, updated TEXT)");
+		db.run("CREATE TABLE IF NOT EXISTS pages (name TEXT, url TEXT, selector TEXT, contents TEXT, checked TEXT, updated TEXT, error TEXT)");
 		db.run("CREATE TABLE IF NOT EXISTS diffs (name TEXT, diff TEXT, date TEXT)");
 		getPages();
 	});
@@ -55,23 +56,19 @@ function nextPage() {
 		// Finish if no more pages
 		i++;
 		if (i >= pages.length) {
-			db.close();
-			console.log(numFetched + ' of ' + pages.length + ' pages fetched, ' + numUpdated + ' updated');
-			if (numErrors > 0) console.log(numErrors == 1 ? '1 error was encountered' : numErrors + ' errors were encountered');
-			return;
+			quit();
 		}
 
 		// Fetch the page
 		if (pages[i].name && pages[i].url && pages[i].selector) {
 			//console.log(i, 'getting page for ' + pages[i].name);
 			numFetched++;
-			request(pages[i].url, function (error, response, body) {
+			request(pages[i].url, function(error, response, body) {
 				if (error) {
-					numErrors++;
-					console.error(i, pages[i].name, 'error getting page', error);
-					return;
+					processfetchedPage(null, 'error getting page: ' + error);
+				} else {
+					processfetchedPage(body, null);
 				}
-				processfetchedPage(body);
 			});
 			break;
 		} else {
@@ -82,77 +79,127 @@ function nextPage() {
 	
 }
 
-function processfetchedPage(body) {
+function quit() {
+	
+	db.close();
+	console.log(numFetched + ' of ' + pages.length + ' pages fetched, ' + numUpdated + ' updated');
+	if (numErrors > 0) console.log(numErrors == 1 ? '1 error was encountered' : numErrors + ' errors were encountered');
+	return;
+	
+}
+
+function processfetchedPage(body, fetchError) {
 	//console.log(i, 'processing ' + pages[i].name);
 	
-	// Find unique instance of selector
-	var $ = cheerio.load(body);
-	var target = $(pages[i].selector);
-	if (target.length != 1) {
-		numErrors++;
-		console.error(i, pages[i].name, target.length == 0 ? 'selector not found' : `too many instances of selector found (${target.length})`);
-		nextPage();
-		return;
-	}
+	var pageError = '';
+	var contents;
+	var currentTime = moment().format('YYYY-MM-DD HH:mm:ss');
 	
-	// Get selected text
-	pages[i].contents = fullTrim(getSpacedText(target.get(0)));
-	pages[i].checked = moment().format('YYYY-MM-DD HH:mm:ss');
-	
-	// Check text is not empty
-	if (pages[i].contents.length == 0) {
-		console.error(i, pages[i].name, 'no text found');
-		nextPage();
-		return;
+	if (fetchError) {
+		pageError = fetchError;
+	} else {
+		
+		// Find unique instance of selector
+		var $ = cheerio.load(body);
+		var target = $(pages[i].selector);
+		if (target.length != 1) {
+			pageError = target.length == 0 ? 'selector not found' : `too many instances of selector found (${target.length})`;
+			//numErrors++;
+			//console.error(i, pages[i].name, );
+			//nextPage();
+			//return;
+		} else {
+			
+			// Get selected text
+			contents = fullTrim(getSpacedText(target.get(0)));
+			if (contents.length == 0) {
+				pageError = 'no text found';
+				// TODO: log error only, not text
+			}
+			
+		}
+		
 	}
 	
 	// Read the row for this page
-	db.get("SELECT name, url, selector, contents FROM pages WHERE name = ?", [pages[i].name], function(error, row) {
+	db.get("SELECT name, url, selector, contents, error FROM pages WHERE name = ?", [pages[i].name], function(dbError, row) {
 		
-		if (error) {
+		if (dbError) {
+			
+			// Log error and quit
+			numErrors++;
+			console.error(i, pages[i].name, 'error retrieving database row');
+			console.error(dbError);
+			console.error('quitting scraper');
+			quit();
+			return;
+			
+		}
+		
+		if (pageError) {
 			
 			// Log error
 			numErrors++;
-			console.error(i, pages[i].name, 'error retrieving row', error);
-			nextPage();
-			return;
+			console.error(i, pages[i].name, 'error getting page', error);
 			
-		} else if (row) {
+			if (row) {
+				
+			} else {
+				
+			}
+
+		} else {
+			
+		}
+	
+	
+	
+	
+	
+					if (error) {
+					return;
+				}
+
+	
+		if (row) {
 			
 			if (row.url != pages[i].url || row.selector != pages[i].selector) {
 				
-				// Selection criteria have changed, just update the table
+				// Selection criteria have changed, just update the table without logging a diff
 				numUpdated++;
 				console.log(i, pages[i].name, 'url or selector has changed, updating table');
-				var statement = db.prepare("UPDATE pages SET url = ?, selector = ?, contents = ?, checked = ?, updated = ? WHERE name = ?", 
-						[pages[i].url, pages[i].selector, pages[i].contents, pages[i].name, pages[i].checked, pages[i].checked]);
+				var statement = db.prepare("UPDATE pages SET url = ?, selector = ?, contents = ?, checked = ?, updated = ?, error = ? WHERE name = ?", 
+						[pages[i].url, pages[i].selector, contents, currentTime, currentTime, error, 
+							pages[i].name]);
 				statement.run();
 				statement.finalize(nextPage);
 				
-			} else if (row.contents != pages[i].contents) {
+			} else if (row.contents != contents) {
 				
 				// Contents have changed
 				numUpdated++;
 				console.log(i, pages[i].name, 'contents have changed, updating table');
 				
 				// Save diff of lines
-				var diffs = diff.diffLines(row.contents, pages[i].contents);
+				var diffs = diff.diffLines(row.contents, contents);
 				var statement = db.prepare("INSERT INTO diffs VALUES (?, ?, ?)", 
-						[pages[i].name, JSON.stringify(diffs), pages[i].checked]);
+						[pages[i].name, JSON.stringify(diffs), currentTime]);
 				statement.run();
 				statement.finalize();
 				
 				// Update the main table
-				var statement = db.prepare("UPDATE pages SET contents = ?, checked = ?, updated = ? WHERE name = ?", 
-						[pages[i].contents, pages[i].checked, pages[i].checked, pages[i].name]);
+				var statement = db.prepare("UPDATE pages SET contents = ?, checked = ?, updated = ?, error = ? WHERE name = ?", 
+						[contents, currentTime, currentTime, error, 
+							pages[i].name]);
 				statement.run();
 				statement.finalize(nextPage);
 				
 				
 			} else {
 				//console.log(i, pages[i].name, 'no change');
-				var statement = db.prepare("UPDATE pages SET checked = ? WHERE name = ?", 
-						[pages[i].checked, pages[i].name]);
+				var statement = db.prepare("UPDATE pages SET checked = ?, error = ? WHERE name = ?", 
+						[currentTime, error, 
+							pages[i].name]);
 				statement.run();
 				statement.finalize(nextPage);
 				
@@ -163,8 +210,8 @@ function processfetchedPage(body) {
 			// Insert row
 			numUpdated++;
 			console.log(i, pages[i].name, 'new page, inserting row');
-			var statement = db.prepare("INSERT INTO pages VALUES (?, ?, ?, ?, ?, ?)", 
-					[pages[i].name, pages[i].url, pages[i].selector, pages[i].contents, pages[i].checked, pages[i].checked]);
+			var statement = db.prepare("INSERT INTO pages VALUES (?, ?, ?, ?, ?, ?, ?)", 
+					[pages[i].name, pages[i].url, pages[i].selector, contents, currentTime, currentTime, error]);
 			statement.run();
 			statement.finalize(nextPage);
 			
@@ -209,9 +256,11 @@ function getSpacedText(element) {
 		
 	} else {
 		
-		// Ignore all other node types (?)
-		console.log(i, pages[i], `unknown node type encountered (${element.nodeType})`);
-		return '';
+		// Ignore comment nodes
+		if (element.nodeType != 8) {
+			console.log(i, pages[i].name, `unknown node type encountered (${element.nodeType})`);
+			return '';
+		}
 		
 	}
 }
