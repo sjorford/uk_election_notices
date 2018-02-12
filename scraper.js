@@ -6,8 +6,8 @@ var gsjson  = require("google-spreadsheet-to-json");
 var moment  = require("moment");
 
 // TODO:
-// send emails for errors
-// front end to view diffs
+// front end to view pages/diffs/errors
+// serialize db statements properly
 // something else I can't remember
 
 // https://stackoverflow.com/questions/10011011/using-node-js-how-do-i-read-a-json-object-into-server-memory
