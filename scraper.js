@@ -196,9 +196,6 @@ function processfetchedPage(page, row, body) {
 		
 	}
 	
-	nextPage();
-	return;
-	
 }
 
 // Get text of HTML element, respecting block-level element boundaries
