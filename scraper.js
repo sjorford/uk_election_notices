@@ -50,11 +50,13 @@ function firstPage() {
 
 function nextPage() {
 	
+	var session = Math.random();
+	
 	while (true) {
 		
 		// Finish if no more pages
 		index++;
-		console.log(index);
+		console.log(index, session);
 		if (index >= pages.length) {
 			quitScraper();
 			return;
