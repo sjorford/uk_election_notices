@@ -6,6 +6,6 @@
 		"inline":
 			["a", "abbr", "acronym", "b", "bdo", "big", "button", "cite", "code", "dfn", "em", "i", "kbd", "label", "map", "q", "samp", "small", "span", "strong", "sub", "sup", "time", "tt", "var", "u"],
 		"other":
-			["img", "input", "textarea", "script", "select"]
+			["img", "input", "textarea", "script", "select", "style"]
 	}
 }
