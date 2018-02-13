@@ -217,7 +217,7 @@ function getSpacedText(page, element) {
 		if (conf.elements.block.indexOf(tag) >= 0 || conf.elements.inline.indexOf(tag) >= 0) {
 			
 			// Get contents of descendant elements
-			var contentsText = element.firstChild ? Array.from(element.childNodes).map(child => getSpacedText(child)).join('') : '';
+			var contentsText = element.firstChild ? Array.from(element.childNodes).map(child => getSpacedText(page, child)).join('') : '';
 			
 			// Surround block elements with newlines
 			if (conf.elements.block.indexOf(tag) >= 0) {
