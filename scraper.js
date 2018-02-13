@@ -117,7 +117,7 @@ function fetchPage(page, row) {
 }
 
 function processfetchedPage(page, row, body) {
-	console.log(page.name, 'processing fetched page');
+	//console.log(page.name, 'processing fetched page');
 	
 	// Find unique instance of selector
 	var $ = cheerio.load(body);
