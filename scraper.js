@@ -128,7 +128,7 @@ function processfetchedPage(page, row, body) {
 	}
 	
 	// Get selected text
-	var contents = fullTrim(getSpacedText(target.get(0)));
+	var contents = fullTrim(getSpacedText(page, target.get(0)));
 	
 	// Check text is not empty
 	if (contents.length == 0) {
@@ -202,7 +202,7 @@ function processfetchedPage(page, row, body) {
 }
 
 // Get text of HTML element, respecting block-level element boundaries
-function getSpacedText(element) {
+function getSpacedText(page, element) {
 	
 	if (element.nodeType == 3) {
 		
