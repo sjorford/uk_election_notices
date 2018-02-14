@@ -66,7 +66,7 @@ function nextPage() {
 		if (pages[index].name && pages[index].url && pages[index].selector) {
 			//console.log(index, session, 'reading database row');
 			readDatabaseRow(pages[index]);
-			break;
+			return;
 		}
 		
 	}
@@ -108,7 +108,6 @@ function fetchPage(page, row) {
 	request(page.url, function (error, response, body) {
 		if (error) {
 			logError(page, row, 'error fetching page', error);
-			nextPage();
 		} else {
 			processfetchedPage(page, row, body);
 		}
@@ -124,7 +123,6 @@ function processfetchedPage(page, row, body) {
 	var target = $(page.selector);
 	if (target.length != 1) {
 		logError(page, row, target.length == 0 ? 'selector not found' : `too many instances of selector found (${target.length})`);
-		nextPage();
 		return;
 	}
 	
@@ -134,7 +132,6 @@ function processfetchedPage(page, row, body) {
 	// Check text is not empty
 	if (contents.length == 0) {
 		logError(page, row, 'no text found');
-		nextPage();
 		return;
 	}
 	
